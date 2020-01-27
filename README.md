@@ -14,4 +14,6 @@ Need To Comment Code ..
 - `make`
 - `./main <image path>`
 
-![Richard_Hendricks](Richard_Hendricks.jpg "Orginal Image") ![Compressed_Richard_Hendricks](compressImage.jpg "Compressed Image with 16 clusters")
+ Orginal Image             |   Compressed Image with 16 clusters
+:------------------------: |:------------------------:
+![Richard_Hendricks](Richard_Hendricks.jpg) |  ![Compressed_Richard_Hendricks](compressImage.jpg)
