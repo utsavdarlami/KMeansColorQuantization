@@ -5,7 +5,7 @@ the nearest centroid making color value containing only given number of centroid
 
 Centroid Initialization is done using Random Initialization
 
-Need To Comment Codes ..
+Need To Comment Code ..
 
 ## Usage
 
@@ -14,6 +14,4 @@ Need To Comment Codes ..
 - `make`
 - `./main <image path>`
 
- Orginal Image             |   Compressed Image with 16 clusters
-:------------------------: |:------------------------:
-![Richard_Hendricks](Richard_Hendricks.jpg) |  ![Compressed_Richard_Hendricks](compressImage.jpg)
+![Richard_Hendricks](Richard_Hendricks.jpg "Orginal Image") ![Compressed_Richard_Hendricks](compressImage.jpg "Compressed Image with 16 clusters")
