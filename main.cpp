@@ -4,12 +4,12 @@
 
 int main(int argc, char** argv )
 {
-  //  /*
-    if ( argc != 2 )
+    if ( argc != 2 ) //if image path is not given [ ./main <image path> ]
     {
         printf("usage: DisplayImage.out <Image_Path>\n");
         return -1;
     }
+
     cv::Mat image;
     image = cv::imread( argv[1], 1 );
 
@@ -19,54 +19,53 @@ int main(int argc, char** argv )
         return -1;
     }
     
+    //for 32 * 32 * 3 image 
+    int rows = image.rows; //32 ;
+    int cols = image.cols;  //32  ;
+    int channels =  image.channels();//3;
 
-    std::cout<<"rows "<<image.rows<<std::endl;
-    std::cout<<"Cols "<<image.cols<<std::endl;
-    std::cout<<"Channel "<<image.channels()<<std::endl;
-    
-    int rows = image.rows;           //32 ;
-    int cols = image.cols;              //32  ;
-    int channels =  image.channels(); //3;
+    std::cout<<"Rows in Image "<<rows<<std::endl;
 
-    unsigned char *pixel = image.ptr(0,0); /// x ,y .. [0,0] pixel value
+    std::cout<<"Columns in Image "<<cols<<std::endl;
 
-    // pixel[0] = static_cast<char>(255);
+    std::cout<<"Channels in Image "<<channels<<std::endl;
+
+
+    // unsigned char *pixel = image.ptr(0,0); /// x ,y .. [0,0] pixel value
+
     // std::cout<<"Blue "<<static_cast<int>(pixel[0])<<std::endl;
-    // A  Cast operator is an unary operator which forces one data type to be converted into another data type.
     // std::cout<<"Green "<<static_cast<int>(pixel[1])<<std::endl;
     // std::cout<<"Red "<<static_cast<int>(pixel[2])<<std::endl;
   
-    // /*
-
-    //  creating a matrix of  pixel value of each point for ;32 * 32 their will be 1024 * 3 ; [no of point * 3]
     
-    int no_of_points  = rows * cols;
-    // int pixelMatrix[no_of_points][channels];
+    int no_of_points  = rows * cols; // no of pixels in the image
 
-    std::vector<std::vector<int>> resizeImage;
+    std::vector<std::vector<int>> resizeImage;//  creating a vector of  pixel value of each point for ;32 * 32 their will be 1024 * 3 ; [no of point * 3]
+
 
 
     int pointPosition = 0; //index for each pixel
     for(int i=0;i<rows;i++){
       for(int j=0;j<cols;j++){
 
-        unsigned char *pixel = image.ptr(i,j); /// y ,x .. [0,0] pixel value
+        unsigned char *pixel = image.ptr(i,j); /// x ,y .. [0,0] pixel value
         resizeImage.push_back(std::vector<int>());
         
         for(int k=0;k<channels;k++){
-          // pixelMatrix[pointPosition][k] = static_cast<int>(pixel[k]);
-          resizeImage[pointPosition].push_back(static_cast<int>(pixel[k]));
+          
+          resizeImage[pointPosition].push_back(static_cast<int>(pixel[k]));//appending pixel value
+          // A  Cast operator is an unary operator which forces one data type to be converted into another data type.
         }
-
+        
         pointPosition +=1; /// index for each pixel //for 32 * 32 image = count is from 0 to 1024
  
       }
     }
 
+    std::cout<<"No of Points :  "<<pointPosition<<std::endl;
 
     // testing pixel value at a point;
     // int atPoint = 69;
-    std::cout<<"No of Points :  "<<pointPosition<<std::endl;
     // std::cout<<"Pixel from Vector"<<std::endl;
     // std::cout<<"B "<<resizeImage[atPoint][0]<<std::endl;
     // std::cout<<"G "<<resizeImage[atPoint][1]<<std::endl;
@@ -74,27 +73,30 @@ int main(int argc, char** argv )
 
     // */
     
-    // cv::namedWindow("Display Image", cv::WINDOW_NORMAL);
+    cv::namedWindow("Display Image", cv::WINDOW_NORMAL);
+    cv::resizeWindow("Display Image", 680,480);
+    cv::imshow("Display Image", image);
     
-    // cv::resizeWindow("Display Image", 680,480);
-    // cv::imshow("Display Image", image);
-    // imwrite
-    
-    // cv::waitKey(0);
+    cv::waitKey(0);
     
     // */
 
-    // float resizeImage[pointPosition];
     
-    std::cout<<"Vector resize image size : "<<resizeImage.size()<<std::endl;
+    // std::cout<<"Vector resize image size : "<<resizeImage.size()<<std::endl;
 
-
+    printf("--- Now Clustering ---");
     std::cout<<" --------------------------------------------------------------------"<<std::endl;
 
 
+    //KMeans<datatype>KMeans(int no of cluster = 8,int no of centroid initialization =10,int no of iteration=300){
+
     KMeans<int> imageCluster(16,10,100);
     
-    imageCluster.fit(resizeImage);
+    imageCluster.fit(resizeImage); // pass the training samples; 
+    /*
+      This sets new centroid with least cost
+      imageCluster.centroid_ vector contains the centroid 
+    */
     
     // for (int p = 0; p < imageCluster.centroid_.size(); p++) { 
     //         std::cout<<p<<" Image Cluster Centroid FInal  : ";
@@ -104,7 +106,11 @@ int main(int argc, char** argv )
     //         std::cout<<" "<<std::endl;
     // }
 
-    imageCluster.predict(resizeImage);
+    imageCluster.predict(resizeImage); // pass the predict samples;
+     /*
+      This sets cluster id for the given predict samples 
+      imageCluster.labels_ vector contains the label for given predict samples; 
+    */
 
   /*
     for(int u=0;u<=10;u++){
@@ -123,7 +129,6 @@ int main(int argc, char** argv )
 
 
 
-    /// change the channel value in  image
     pointPosition = 0; //index for each pixel
 
     for(int i=0;i<rows;i++){
@@ -133,8 +138,8 @@ int main(int argc, char** argv )
 
         for(int k=0;k<channels;k++){
           
-          pixel[k] = static_cast<char>(int(imageCluster.centroid_[imageCluster.labels_[pointPosition]][k]));
-
+          pixel[k] = static_cast<char>(int(imageCluster.centroid_[imageCluster.labels_[pointPosition]][k]));  
+          //changing the color value in the image at i,j and channel k
         }
         pointPosition +=1; /// index for each pixel //for 32 * 32 image = count is from 0 to 1024
  
@@ -142,17 +147,20 @@ int main(int argc, char** argv )
     }
 
     std::cout<<" Done Compression"<<std::endl;
-
-    // cv::namedWindow("Compress Image", cv::WINDOW_NORMAL);
     
-    // cv::resizeWindow("Compress Image", 680,480);
-    // cv::imshow("Compress Image", image);
-    // imwrite
+    std::cout<<" --------------------------------------------------------------------"<<std::endl;
 
-    cv::imwrite("../compressImage.jpg",image);
+    cv::namedWindow("Compress Image", cv::WINDOW_NORMAL);
+    cv::resizeWindow("Compress Image", 680,480);
+    cv::imshow("Compress Image", image);
+
+    cv::imwrite("../compressImage.jpg",image);//writing the compressed image
     
-    // cv::waitKey(0);
-    // cv::destroyAllWindows();
+    cv::waitKey(0);
+
+    std::cout<<" --------------------------------------------------------------------"<<std::endl;
+
+    cv::destroyAllWindows();
 
     return 0;
 }
