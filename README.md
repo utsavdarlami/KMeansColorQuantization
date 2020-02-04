@@ -8,7 +8,7 @@ Centroid Initialization is done using Random Initialization
 Need To Comment Code ..
 
 ## Usage
-- [Install OpenCV for C++](https//opencv.org/releases/)
+- [Install OpenCV for C++](https://opencv.org/releases/)
 - `mkdir build && cd build`
 - `cmake ..`
 - `make`
