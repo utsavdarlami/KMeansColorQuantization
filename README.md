@@ -15,6 +15,6 @@ Need To Comment Code ..
 - `make`
 - `./main <image path>`
 
- Orginal Image             |   Quantized Image with 16 clusters
+ Original Image             |   Quantized Image with 16 clusters
 :------------------------: |:------------------------:
 ![Richard_Hendricks](Richard_Hendricks.jpg) |  ![Compressed_Richard_Hendricks](compressImage.jpg)
