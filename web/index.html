@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>K-Means Color Quantization</title>
+  <style>
+    body { font-family: sans-serif; margin: 24px; }
+    h1, .controls { text-align: center; }  /* center title and controls like the images */
+    .controls { margin-bottom: 16px; }
+    .controls label { margin-right: 16px; }
+    .images { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }  /* center the boxes in the row */
+    /* the "box" around each canvas: border + padding inside, margin outside */
+    .box { border: 1px solid #ccc; border-radius: 8px; padding: 12px; margin: 8px;
+           flex: 0 1 auto; max-width: 450px; }  /* hug the image; content at most 450px wide (padding is extra) */
+    .box h3 { margin: 0 0 8px; font-size: 14px; color: #555; }
+    canvas { display: block; max-width: 100%; height: auto; }  /* shrink to fit the box; pixels unchanged */
+  </style>
+</head>
+<body>
+  <h1>K-Means Color Quantization in WebAssembly</h1>
+
+  <div class="controls">
+    <label>Image: <input type="file" id="file" accept="image/*"></label>
+    <label><input type="radio" name="mode" value="quantize" checked> Quantize</label>
+    <label><input type="radio" name="mode" value="invert"> Invert</label>
+    <label id="k-control">k = <span id="k-value">16</span>
+      <input type="range" id="k" min="2" max="32" value="16"></label>
+    <span id="status"></span>
+  </div>
+
+  <div class="images">
+    <div class="box"><h3>Original</h3><canvas id="orig"></canvas></div>
+    <div class="box"><h3>Result</h3><canvas id="out"></canvas></div>
+  </div>
+
+  <!-- 1. Load both modules. Each defines ONE global factory function
+          (named by -sEXPORT_NAME), instead of both fighting over `Module`. -->
+  <script src="invert.js"></script>
+  <script src="quantize.js"></script>
+
+  <script>
+    let invertModule, quantizeModule, imageData;
+    const MAX_SIDE = 800;  // downscale big photos so each run stays fast
+
+    // draw an image (URL) onto the first canvas, scaled down if needed, then render
+    function loadImage(src) {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));  // never upscale
+        const c1 = document.getElementById('orig');
+        c1.width = Math.round(img.width * scale);
+        c1.height = Math.round(img.height * scale);
+        const ctx1 = c1.getContext('2d');
+        ctx1.drawImage(img, 0, 0, c1.width, c1.height);  // the extra width/height args do the scaling
+        imageData = ctx1.getImageData(0, 0, c1.width, c1.height);
+        render();
+      };
+      img.src = src;
+    }
+
+    function render() {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const k = Number(document.getElementById('k').value);
+      document.getElementById('k-value').textContent = k;
+      document.getElementById('k-control').hidden = (mode === 'invert');  // k only matters for quantize
+
+      // 3. Each module is its own object; call the function on the right one.
+      const start = performance.now();
+      const result = mode === 'invert'
+        ? invertModule.invert(imageData.data)
+        : quantizeModule.quantize(imageData.data, k);
+      const ms = performance.now() - start;
+
+      const c2 = document.getElementById('out');
+      c2.width = imageData.width;
+      c2.height = imageData.height;
+      c2.getContext('2d').putImageData(
+        new ImageData(new Uint8ClampedArray(result), imageData.width, imageData.height), 0, 0);
+      document.getElementById('status').textContent = `${mode}: ${ms.toFixed(0)} ms`;
+    }
+
+    // 2. Each factory returns a Promise that resolves once its .wasm is loaded.
+    //    Promise.all waits for both (like asyncio.gather in Python).
+    Promise.all([createInvertModule(), createQuantizeModule()]).then(([inv, q]) => {
+      invertModule = inv;
+      quantizeModule = q;
+
+      loadImage('../Richard_Hendricks.jpg');
+
+      // a chosen file becomes a temporary local URL; the image never leaves the browser
+      document.getElementById('file').onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) loadImage(URL.createObjectURL(file));
+      };
+    });
+
+    // re-render whenever the slider moves or the mode changes
+    document.getElementById('k').oninput = render;
+    document.querySelectorAll('input[name="mode"]').forEach(r => r.onchange = render);
+  </script>
+</body>
+</html>
